@@ -5,14 +5,13 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Data;
 
-import java.util.Date;
 import java.util.List;
 
 @Data
 @XmlRootElement(name = "AircraftReport")
 public class AircraftReport {
-    private Date receipt_time;
-    private Date observation_time;
+    private String receipt_time;
+    private String observation_time;
     private String aircraft_ref;
     private Double latitude;
     private Double longitude;
