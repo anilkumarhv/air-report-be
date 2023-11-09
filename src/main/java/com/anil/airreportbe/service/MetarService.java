@@ -1,10 +1,10 @@
 package com.anil.airreportbe.service;
 
 import com.anil.airreportbe.Exception.NotFoundException;
+import com.anil.airreportbe.model.Airport;
 import com.anil.airreportbe.model.Station;
 import com.anil.airreportbe.model.entity.Metar;
 import com.anil.airreportbe.repository.MetarRepository;
-import com.anil.airreportbe.repository.PirepRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -29,14 +29,18 @@ public class MetarService {
 
     private final PirepServiceV1 pirepServiceV1;
 
-    public MetarService(StationService stationService, MetarRepository metarRepository, PirepServiceV1 pirepServiceV1) {
+    private final AirportService airportService;
+
+    public MetarService(StationService stationService, MetarRepository metarRepository, PirepServiceV1 pirepServiceV1, AirportService airportService) {
         this.stationService = stationService;
         this.metarRepository = metarRepository;
         this.pirepServiceV1 = pirepServiceV1;
+        this.airportService = airportService;
     }
 
     public List<Metar> getMetarReports(String code, Integer radialDistance, ZonedDateTime startTime, ZonedDateTime endTime, Boolean isPirepMissing, Boolean isPirepCondition, String type) {
-        List<String> stations = getStations(code, radialDistance);
+//        List<String> stations = getStations(code, radialDistance);
+        List<String> stations = getStationsFromCSV(code, radialDistance);
 //        List<Metar> metarReports = metarRepository.findAllByAircraftCodeInAndAircraftTypeAndObservationTimeBetween(stations, type, startTime, endTime);
         List<Metar> metarReports = metarRepository.findAll(getMetarQueryWithJoin(stations, startTime, endTime, isPirepCondition, isPirepMissing, type));
 
@@ -94,5 +98,18 @@ public class MetarService {
             }
         }
         return null;
+    }
+
+    private List<String> getStationsFromCSV(String code, Integer radialDistance) {
+        Optional<Airport> station = airportService.getAirportInfo(code.toUpperCase());
+        if (station.isPresent()) {
+            if (radialDistance > 0) {
+                return airportService.findNearestAirports(airportService.getAirportsInfoFromCSVFile(), station.get(), radialDistance).stream().map(Airport::getIata).collect(Collectors.toList());
+            } else {
+                return Collections.singletonList(code);
+            }
+        } else {
+            throw new NotFoundException("Airport Identifier not found with the Station ID: " + code);
+        }
     }
 }
