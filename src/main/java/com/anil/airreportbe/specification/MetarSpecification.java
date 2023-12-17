@@ -2,9 +2,12 @@ package com.anil.airreportbe.specification;
 
 import com.anil.airreportbe.model.entity.Metar;
 import com.anil.airreportbe.model.entity.SkyCondition;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.ZonedDateTime;
@@ -51,7 +54,19 @@ public class MetarSpecification {
 
             List<Predicate> orClauseFilters = new ArrayList<>();
             if (isPirepCondition) {
-                orClauseFilters.add(criteriaBuilder.lessThanOrEqualTo(root.get("visibilityStatuteMi"), 5));
+//                orClauseFilters.add(criteriaBuilder.lessThanOrEqualTo(root.get("visibilityStatuteMi").as(Double.class), 5d));
+
+                orClauseFilters.add(criteriaBuilder.or(
+                        criteriaBuilder.and(
+                                isNumeric(root, criteriaBuilder),
+                                criteriaBuilder.lessThanOrEqualTo(root.get("visibilityStatuteMi").as(Double.class), 5d)
+                        ),
+                        criteriaBuilder.and(
+                                isString(root, criteriaBuilder),
+                                criteriaBuilder.lessThanOrEqualTo(root.get("visibilityStatuteMi").as(Double.class), 5d)
+                        )
+                ));
+
                 orClauseFilters.add(criteriaBuilder.isNotNull(root.get("windGustKt")));
                 orClauseFilters.add(criteriaBuilder.like(root.get("wxString"), "(?<!\\w)(?:TS|TSRA)(?!\\w)"));
                 orClauseFilters.add(criteriaBuilder.lessThanOrEqualTo(skyConditionListJoin.get("cloudBaseFtAgl"), 5000));
@@ -64,4 +79,23 @@ public class MetarSpecification {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
+
+    private static Predicate isNumeric(Root<Metar> root, CriteriaBuilder criteriaBuilder) {
+        return criteriaBuilder.or(
+                criteriaBuilder.like(root.get("visibilityStatuteMi"), "\\d+"),
+                criteriaBuilder.like(root.get("visibilityStatuteMi"), "\\d*\\.\\d+")
+        );
+    }
+
+    private static Predicate isString(Root<Metar> root, CriteriaBuilder criteriaBuilder) {
+        return criteriaBuilder.like(root.get("visibilityStatuteMi"), "\\d+");
+    }
+
+//    private static Expression<Number> castToNumeric(Root<Metar> root, CriteriaBuilder criteriaBuilder) {
+//        return criteriaBuilder.cast(root.get("visibilityStatuteMi"), Number.class);
+//    }
+//
+//    private static Expression<Integer> castToInteger(Root<Metar> root, CriteriaBuilder criteriaBuilder) {
+//        return criteriaBuilder.cast(root.get("visibilityStatuteMi"), Integer.class);
+//    }
 }

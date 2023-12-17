@@ -81,7 +81,8 @@ public class PirepServiceV1 {
 
 
     public Boolean findPirepReport(String code, Integer radialDistance, ZonedDateTime startTime, ZonedDateTime endTime) {
-        List<String> stations = getStations(code, radialDistance);
+//        List<String> stations = getStations(code, radialDistance);
+        List<String> stations = getStationsFromCSV(code, radialDistance);
         List<Pirep> pirepReports = pirepRepository.findAllByAircraftCodeInAndObservationTimeBetween(stations, startTime, endTime);
         return Objects.requireNonNull(pirepReports).size() <= 0;
     }
