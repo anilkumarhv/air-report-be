@@ -54,10 +54,10 @@ public class Metar implements Serializable {
     private Double longitude;
     private Double tempC;
     private Double dewpointC;
-    private Integer windDirDegrees;
+    private String windDirDegrees;
     private Integer windSpeedKt;
     private Integer windGustKt;
-    private Double visibilityStatuteMi;
+    private String visibilityStatuteMi;
     private Double altimInHg;
     private Double seaLevelPressureMb;
     private String wxString;
