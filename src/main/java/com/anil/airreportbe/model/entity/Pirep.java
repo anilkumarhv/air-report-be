@@ -46,7 +46,7 @@ public class Pirep implements Serializable {
     private Integer windSpeedKt;
     private String reportType;
     private String rawText;
-    private Integer visibilityStatuteMi;
+    private String visibilityStatuteMi;
     private String wxString;
     private String vertGustKt;
 

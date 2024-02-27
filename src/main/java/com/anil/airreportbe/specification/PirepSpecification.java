@@ -4,10 +4,13 @@ import com.anil.airreportbe.model.entity.Pirep;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class PirepSpecification {
 
@@ -52,11 +55,33 @@ public class PirepSpecification {
             }
 
             if (null != visibility && !visibility.isBlank()) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("visibilityStatuteMi"), Float.valueOf(visibility)));
+//                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("visibilityStatuteMi"), Float.valueOf(visibility)));
+
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.and(
+                                isNumeric(root, criteriaBuilder),
+                                criteriaBuilder.lessThanOrEqualTo(root.get("visibilityStatuteMi").as(Double.class), Double.valueOf(visibility))
+                        ),
+                        criteriaBuilder.and(
+                                isString(root, criteriaBuilder),
+                                criteriaBuilder.lessThanOrEqualTo(root.get("visibilityStatuteMi").as(Double.class), Double.valueOf(visibility))
+                        )
+                ));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    private static Predicate isNumeric(Root<Pirep> root, CriteriaBuilder criteriaBuilder) {
+        return criteriaBuilder.or(
+                criteriaBuilder.like(root.get("visibilityStatuteMi"), "\\d+"),
+                criteriaBuilder.like(root.get("visibilityStatuteMi"), "\\d*\\.\\d+")
+        );
+    }
+
+    private static Predicate isString(Root<Pirep> root, CriteriaBuilder criteriaBuilder) {
+        return criteriaBuilder.like(root.get("visibilityStatuteMi"), "\\d+");
     }
 
     public static Specification<Pirep> getIcing(Boolean icingCondition) {
