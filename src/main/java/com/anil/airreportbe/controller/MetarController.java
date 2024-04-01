@@ -34,7 +34,7 @@ public class MetarController {
                                                    @RequestParam(name = "isPirepCondition", required = false, defaultValue = "false") Boolean isPirepCondition,
                                                    @RequestParam(name = "type", required = false, defaultValue = "METAR") String type) {
 
-        List<Metar> metarReports = metarService.getMetarReports(code, radialDistance, startTime, endTime, isPirepMissing, isPirepCondition, type);
+        List<Metar> metarReports = metarService.getMetarReportsNew(code, radialDistance, startTime, endTime, isPirepMissing, isPirepCondition, type);
 
         return new ResponseEntity<>(metarReports, HttpStatus.OK);
     }

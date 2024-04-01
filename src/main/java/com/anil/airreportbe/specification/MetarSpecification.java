@@ -91,6 +91,43 @@ public class MetarSpecification {
         return criteriaBuilder.like(root.get("visibilityStatuteMi"), "\\d+");
     }
 
+    public static Specification<Metar> getMetarQueryWithJoinNew(List<String> stations, ZonedDateTime startDateTime, ZonedDateTime endDateTime, Boolean isPirepCondition, Boolean isPirepMissing, String type) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+//            ListJoin<Metar, SkyCondition> skyConditionListJoin = root.joinList("skyConditions", JoinType.LEFT);
+
+            Expression<String> aircraftCode = root.get("aircraft").get("code");
+            Expression<ZonedDateTime> observationTime = root.get("observationTime");
+            Expression<String> aircraftType = root.get("aircraft").get("type");
+            Expression<String> visibilityStatuteMi = root.get("visibilityStatuteMi");
+//            Expression<Integer> cloudBaseFtAgl = skyConditionListJoin.get("cloudBaseFtAgl");
+
+            predicates.add(aircraftCode.in(stations));
+            predicates.add(criteriaBuilder.between(observationTime, startDateTime, endDateTime));
+            predicates.add(criteriaBuilder.equal(aircraftType, type));
+
+            if (isPirepCondition) {
+                ListJoin<Metar, SkyCondition> skyConditionListJoin = root.joinList("skyConditions", JoinType.LEFT);
+                Expression<Integer> cloudBaseFtAgl = skyConditionListJoin.get("cloudBaseFtAgl");
+
+                Predicate isNumeric = criteriaBuilder.like(visibilityStatuteMi, "\\d*\\.\\d+");
+                Predicate isString = criteriaBuilder.like(visibilityStatuteMi, "\\d+");
+
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.and(isNumeric, criteriaBuilder.lessThanOrEqualTo(visibilityStatuteMi.as(Double.class), 5d)),
+                        criteriaBuilder.and(isString, criteriaBuilder.lessThanOrEqualTo(visibilityStatuteMi.as(Double.class), 5d))
+                ));
+
+                predicates.add(criteriaBuilder.isNotNull(root.get("windGustKt")));
+                predicates.add(criteriaBuilder.like(root.get("wxString"), "(?<!\\w)(?:TS|TSRA)(?!\\w)"));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(cloudBaseFtAgl, 5000));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
 //    private static Expression<Number> castToNumeric(Root<Metar> root, CriteriaBuilder criteriaBuilder) {
 //        return criteriaBuilder.cast(root.get("visibilityStatuteMi"), Number.class);
 //    }
