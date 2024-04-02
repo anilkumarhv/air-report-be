@@ -113,15 +113,19 @@ public class MetarSpecification {
 
                 Predicate isNumeric = criteriaBuilder.like(visibilityStatuteMi, "\\d*\\.\\d+");
                 Predicate isString = criteriaBuilder.like(visibilityStatuteMi, "\\d+");
+                // OR conditions
+                List<Predicate> orPredicates = new ArrayList<>();
 
-                predicates.add(criteriaBuilder.or(
+                orPredicates.add(criteriaBuilder.or(
                         criteriaBuilder.and(isNumeric, criteriaBuilder.lessThanOrEqualTo(visibilityStatuteMi.as(Double.class), 5d)),
                         criteriaBuilder.and(isString, criteriaBuilder.lessThanOrEqualTo(visibilityStatuteMi.as(Double.class), 5d))
                 ));
 
-                predicates.add(criteriaBuilder.isNotNull(root.get("windGustKt")));
-                predicates.add(criteriaBuilder.like(root.get("wxString"), "(?<!\\w)(?:TS|TSRA)(?!\\w)"));
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(cloudBaseFtAgl, 5000));
+                orPredicates.add(criteriaBuilder.isNotNull(root.get("windGustKt")));
+                orPredicates.add(criteriaBuilder.like(root.get("wxString"), "(?<!\\w)(?:TS|TSRA)(?!\\w)"));
+                orPredicates.add(criteriaBuilder.lessThanOrEqualTo(cloudBaseFtAgl, 5000));
+
+                predicates.add(criteriaBuilder.or(orPredicates.toArray(new Predicate[0])));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
